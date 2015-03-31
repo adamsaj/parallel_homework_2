@@ -5,7 +5,7 @@
 #include <cuda.h>
 #include "common.h"
 
-#define NUM_THREADS 256
+#define NUM_THREADS 256 //change?
 
 extern double size;
 //
@@ -20,6 +20,7 @@ __device__ int bins_per_side;
 int host_bins_per_side;
 
 //device variable macros
+//not sure how these work
 #define BIN_SIZE bin_size
 #define NUM_BINS_PER_SIDE bins_per_side
 #define NUM_BINS (NUM_BINS_PER_SIDE*NUM_BINS_PER_SIDE)
