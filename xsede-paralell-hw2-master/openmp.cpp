@@ -74,27 +74,30 @@ int main(int argc, char **argv)
 #endif
 
         int number_in_block[blocksize*blocksize];
-#pragma omp parallel shared(number_in_block)
+#pragma omp parallel shared(number_in_block) //declares the following section to be parallel with the number_in_block shared between threads
         {
-#pragma omp for
+#pragma omp for //this for is parallel, I can experiment with clauses like "schedule (dynamic, chunk_size)" maybe try 50 for chunk size
         for(int b=0; b<blocksize*blocksize; b++){
             number_in_block[b] = 0; // starts with no particles in any box;
         }
 
-#pragma omp for
+#pragma omp for //parallel for, I wonder what the nowait clause would do here...
         for(size_t p = 0; p < n; p++) {
             double x = particles[p].x;
             double y = particles[p].y;
 
             int x_index = (int)floor(x/block_width);
             int y_index = (int)floor(y/block_width);
-#pragma omp atomic
+#pragma omp atomic //this avoids a race condition in updating number_in_block(?), this is effectively a critical section that acts only on one statement
             number_in_block[x_index + y_index*blocksize]++;
-
+//not sure why the following statement isn't also atomic/critical
             blocks[x_index + y_index*blocksize][number_in_block[x_index + y_index*blocksize]-1] = particles+p;
         }
-        }
+        } // note: this is the end of the parallel section, the following loops are new branches in the program
 #pragma omp parallel for  shared(blocks, number_in_block) reduction (+:navg) reduction(+:davg)
+//reduction clause causes the private coppies of navg and davg to be added to the global coppies at the end of the loop
+//not sure which of the following nested for loops are actually being parallelized. probably only the outermost, and thats fine as long as all the cores stay busy
+//might want to see if the second for can also be parallelized to reduce the thread size and even out the ammount of work (i.e. an idle processor won't have to wait as long at the end for other processors to finish if the thread size is smaller)
         for(int j=0; j<blocksize; j++){
             for(int i=0; i<blocksize; i++){
                 for(int p=0; p<number_in_block[i + j*blocksize]; p++ ){
@@ -160,7 +163,7 @@ int main(int argc, char **argv)
         }
     }
     simulation_time = read_timer() - simulation_time;
-#pragma omp parallel
+#pragma omp parallel //not sure why this section is parallel since the only statemend in it is only exicuted by the master thread
     {
 #pragma omp master
         printf( "n = %d,threads = %d, simulation time = %g seconds", n,omp_get_num_threads(), simulation_time);
@@ -194,7 +197,7 @@ int main(int argc, char **argv)
 //
 // Printing summary data
 //
-#pragma omp parallel
+#pragma omp parallel //again, why parallel?
     {
         if(fsum) {
 #pragma omp master
