@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -A TG-CCR130008
+#SBATCH -A TG-CCR140008
 #SBATCH -J auto-particle-pthreads16
 #SBATCH -o auto-particle-pthreads16.stdout
 #SBATCH -n 16         

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -A TG-CCR130008
+#SBATCH -A TG-CCR140008
 #SBATCH -J particle-openmp16
 #SBATCH -o particle-openmp16.stdout
 #SBATCH -n 16         
