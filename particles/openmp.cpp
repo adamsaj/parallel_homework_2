@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 //
 // Printing summary data
 //
-//#pragma omp parallel //again, why parallel? <still don't know, but removing it (and the other one) caused the grade to jump to 79!
+//#pragma omp parallel //again, why parallel? <still don't know, but removing it (and the other one) caused the grade to jump to 79! I suspect the majority of the speedup came from not doing the following if in parallel
 //    {
         if(fsum) {
 //#pragma omp master
