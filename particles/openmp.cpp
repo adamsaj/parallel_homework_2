@@ -76,12 +76,12 @@ int main(int argc, char **argv)
         int number_in_block[blocksize*blocksize];
 #pragma omp parallel shared(number_in_block) //declares the following section to be parallel with the number_in_block shared between threads
         {
-#pragma omp for //this for is parallel, I can experiment with clauses like "schedule (dynamic, chunk_size)" maybe try 50 for chunk size
+#pragma omp for //this for is parallel, I can experiment with clauses like "schedule (dynamic, chunk_size)" maybe try 50 for chunk size <this reduces the grade to 40...
         for(int b=0; b<blocksize*blocksize; b++){
             number_in_block[b] = 0; // starts with no particles in any box;
         }
 
-#pragma omp for //parallel for, I wonder what the nowait clause would do here...
+#pragma omp for nowait //parallel for, I wonder what the nowait clause would do here... <not much.
         for(size_t p = 0; p < n; p++) {
             double x = particles[p].x;
             double y = particles[p].y;
@@ -99,6 +99,7 @@ int main(int argc, char **argv)
 //not sure which of the following nested for loops are actually being parallelized. probably only the outermost, and thats fine as long as all the cores stay busy
 //might want to see if the second for can also be parallelized to reduce the thread size and even out the ammount of work (i.e. an idle processor won't have to wait as long at the end for other processors to finish if the thread size is smaller)
         for(int j=0; j<blocksize; j++){
+//#pragma omp parallel for  shared(blocks, number_in_block) reduction (+:navg) reduction(+:davg) <this caused the grade to drop to 39...
             for(int i=0; i<blocksize; i++){
                 for(int p=0; p<number_in_block[i + j*blocksize]; p++ ){
                     blocks[i + j*blocksize][p]->ax = blocks[i + j*blocksize][p]->ay = 0;
@@ -163,11 +164,11 @@ int main(int argc, char **argv)
         }
     }
     simulation_time = read_timer() - simulation_time;
-#pragma omp parallel //not sure why this section is parallel since the only statemend in it is only exicuted by the master thread
-    {
-#pragma omp master
+//#pragma omp parallel //not sure why this section is parallel since the only statemend in it is only exicuted by the master thread
+  //  {
+//#pragma omp master
         printf( "n = %d,threads = %d, simulation time = %g seconds", n,omp_get_num_threads(), simulation_time);
-    }
+  //  }
 
     if(find_option(argc, argv, "-no") == -1) {
         if(nabsavg) {
@@ -197,13 +198,13 @@ int main(int argc, char **argv)
 //
 // Printing summary data
 //
-#pragma omp parallel //again, why parallel?
-    {
+//#pragma omp parallel //again, why parallel? <still don't know, but removing it (and the other one) caused the grade to jump to 79!
+//    {
         if(fsum) {
-#pragma omp master
+//#pragma omp master
             fprintf(fsum, "%d %d %g\n", n, omp_get_num_threads(), simulation_time);
         }
-    }
+//    }
 
 //
 // Clearing space
